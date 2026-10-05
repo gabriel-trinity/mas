@@ -1,0 +1,6 @@
+{
+  "name": "SORA Interest Calculator",
+  "description": "Institutional-grade Singapore Overnight Rate Average (SORA) calculator with MAS-backed rate compounding, loan amortization, period in-arrears computation, and stress testing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

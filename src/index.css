@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --mas-navy: #002B49;
+    --mas-navy-dark: #001A2E;
+    --mas-navy-light: #004B87;
+    --mas-navy-subtle: #F0F6FA;
+    --mas-gold: #C5A059;
+    --mas-gold-dark: #9E7B34;
+    --mas-gold-light: #FDF8EE;
+    --mas-green: #0D6838;
+    --mas-green-light: #EBF7EE;
+    --mas-slate: #1E293B;
+    --mas-border: #D1DDE8;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #F8FAFC;
+    color: #0F172A;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Official MAS Navy & Gold Brand Identity Utilities (Strictly No Red) */
+.bg-mas-navy { background-color: #002B49; }
+.hover\:bg-mas-navy-dark:hover { background-color: #001A2E; }
+.text-mas-navy { color: #002B49; }
+.border-mas-navy { border-color: #002B49; }
+
+.bg-mas-gold { background-color: #C5A059; }
+.text-mas-gold { color: #C5A059; }
+.border-mas-gold { border-color: #C5A059; }
+
+.bg-mas-gold-light { background-color: #FDF8EE; }
+.text-mas-gold-dark { color: #9E7B34; }
+
+.bg-mas-green { background-color: #0D6838; }
+.text-mas-green { color: #0D6838; }
+.bg-mas-green-light { background-color: #EBF7EE; }
+.border-mas-green { border-color: #0D6838; }
