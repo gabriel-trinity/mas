@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import {
   Activity,
+  CheckCircle2,
   Code2,
   Database,
   RefreshCw,
   Search,
+  ShieldCheck,
 } from 'lucide-react';
 import { DailySoraRate } from '../types/sora';
 import { MAS_SORA_RATES } from '../data/masHistoricalRates';
@@ -13,9 +15,10 @@ export const RatesExplorer: React.FC = () => {
   const [rates, setRates] = useState<DailySoraRate[]>(MAS_SORA_RATES);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedMetric, setSelectedMetric] = useState<'rate' | 'compound1M' | 'compound3M' | 'compound6M'>('compound3M');
-  const [apiEndpoint, setApiEndpoint] = useState<string>('/api/sora-rates');
+  const [apiEndpoint, setApiEndpoint] = useState<string>('/api/sora');
   const [apiStatus, setApiStatus] = useState<'ready' | 'testing' | 'success' | 'error'>('ready');
-  const [apiMessage, setApiMessage] = useState<string>('Ready for backend integration');
+  const [apiMessage, setApiMessage] = useState<string>('Ready to query serverless /api/sora endpoint');
+  const [healthStatus, setHealthStatus] = useState<any>(null);
 
   // Manual rate override inputs
   const [overrideDate, setOverrideDate] = useState<string>('2026-10-06');
@@ -76,7 +79,7 @@ export const RatesExplorer: React.FC = () => {
   // Test backend API connection handler
   const handleTestApi = async () => {
     setApiStatus('testing');
-    setApiMessage('Querying API endpoint...');
+    setApiMessage(`Querying serverless endpoint: ${apiEndpoint}...`);
 
     try {
       const res = await fetch(apiEndpoint, {
@@ -85,22 +88,39 @@ export const RatesExplorer: React.FC = () => {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setRates(data);
+        const json = await res.json();
+
+        // If checking health endpoint
+        if (apiEndpoint.includes('/api/health')) {
+          setHealthStatus(json);
           setApiStatus('success');
-          setApiMessage(`Successfully synchronized ${data.length} records from backend!`);
+          setApiMessage(
+            `Health check passed! Key configured: ${json.masGateway?.keyConfigured ? 'Yes (Live)' : 'No (Baseline Mode)'}. Uptime: ${json.uptimeSeconds}s.`
+          );
+          return;
+        }
+
+        // If checking SORA or exchange rates
+        const records = Array.isArray(json) ? json : json.data || json.result?.records;
+        if (Array.isArray(records) && records.length > 0) {
+          setRates(records);
+          setApiStatus('success');
+          setApiMessage(
+            `Successfully pulled ${records.length} records from ${json.source || 'endpoint'}! ${
+              json.warning ? `Note: ${json.warning}` : ''
+            }`
+          );
           return;
         }
       }
       throw new Error(`Endpoint returned status ${res.status}`);
-    } catch (err: unknown) {
+    } catch (err: any) {
       setTimeout(() => {
         setApiStatus('error');
         setApiMessage(
-          `Notice: Backend endpoint (${apiEndpoint}) not yet connected. Using built-in MAS baseline dataset. Frontend is fully prepared to consume this endpoint once your backend is ready!`
+          `Notice: ${err?.message || 'Connection error'}. You can set MAS_KEY_ID in your environment variables to pull live rates from MAS API Gateway.`
         );
-      }, 600);
+      }, 500);
     }
   };
 
@@ -116,7 +136,7 @@ export const RatesExplorer: React.FC = () => {
       compound1M: Number((rateNum + 0.015).toFixed(4)),
       compound3M: Number((rateNum + 0.035).toFixed(4)),
       compound6M: Number((rateNum + 0.055).toFixed(4)),
-      soraIndex: 1.159200,
+      soraIndex: 1.1592,
     };
 
     setRates([newRecord, ...rates]);
@@ -130,11 +150,11 @@ export const RatesExplorer: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#002B49]" />
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#002B49]">
-              MAS SORA Rates & Backend Integration Gateway
+              MAS SORA Rates & Serverless Integration Gateway
             </h2>
           </div>
           <p className="text-sm text-slate-600 mt-1">
-            Browse official historical MAS overnight rates and configure the future backend API integration endpoint.
+            Official historical MAS overnight rates and serverless API endpoints (/api/health.ts, /api/sora.ts).
           </p>
         </div>
       </div>
@@ -264,23 +284,46 @@ export const RatesExplorer: React.FC = () => {
         </div>
       </div>
 
-      {/* Backend Integration Ready Panel in MAS Corporate Navy (#002B49) */}
+      {/* Serverless Connection Architecture Panel in MAS Corporate Navy (#002B49) */}
       <div className="bg-[#002B49] text-white rounded-2xl p-6 sm:p-7 shadow-lg border border-[#001A2E] space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-[#C5A059] text-[#002B49]">
               <Database className="w-4 h-4" />
             </span>
-            <h3 className="text-base font-bold text-white">Backend Integration Architecture</h3>
+            <h3 className="text-base font-bold text-white">MAS Serverless Endpoints Connection</h3>
           </div>
           <span className="text-xs font-mono font-bold text-[#002B49] bg-[#C5A059] px-2.5 py-0.5 rounded-lg">
-            Plug-and-Play Ready
+            Root /api Module Active
           </span>
         </div>
 
         <p className="text-xs text-[#D1DDE8] leading-relaxed">
-          The frontend is pre-wired to consume live MAS rates from your backend service. Once you create your backend route (e.g. Express proxy or automated cron fetching from MAS Datastore API), specify the endpoint URL below.
+          Serverless endpoints are implemented in the project root <code className="bg-[#001A2E] px-1.5 py-0.5 rounded font-mono text-[#C5A059]">/api</code> directory. They communicate directly with the official MAS API Gateway using the <code className="bg-[#001A2E] px-1.5 py-0.5 rounded font-mono text-[#C5A059]">KeyId: &lt;MAS_KEY_ID&gt;</code> header without hardcoded keys.
         </p>
+
+        {/* Quick Endpoint Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-300 font-bold">Select Endpoint:</span>
+          {[
+            { label: '/api/sora', url: '/api/sora' },
+            { label: '/api/health', url: '/api/health' },
+            { label: '/api/exchange-rates', url: '/api/exchange-rates' },
+          ].map((ep) => (
+            <button
+              key={ep.url}
+              type="button"
+              onClick={() => setApiEndpoint(ep.url)}
+              className={`text-xs px-2.5 py-1 rounded-lg font-mono font-bold transition-all cursor-pointer ${
+                apiEndpoint === ep.url
+                  ? 'bg-[#C5A059] text-[#002B49]'
+                  : 'bg-[#001A2E] text-[#D1DDE8] hover:text-white border border-white/10'
+              }`}
+            >
+              {ep.label}
+            </button>
+          ))}
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <input
@@ -288,7 +331,7 @@ export const RatesExplorer: React.FC = () => {
             value={apiEndpoint}
             onChange={(e) => setApiEndpoint(e.target.value)}
             className="flex-1 px-3.5 py-2.5 text-xs font-mono font-bold bg-[#001A2E] border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#C5A059]"
-            placeholder="/api/sora-rates"
+            placeholder="/api/sora"
           />
 
           <button
@@ -298,13 +341,13 @@ export const RatesExplorer: React.FC = () => {
             className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-bold bg-[#C5A059] hover:bg-[#9E7B34] text-[#002B49] hover:text-white rounded-xl transition-colors disabled:opacity-50 whitespace-nowrap shadow-xs cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${apiStatus === 'testing' ? 'animate-spin' : ''}`} />
-            <span>Test Backend Sync</span>
+            <span>Test Connection</span>
           </button>
         </div>
 
         {apiMessage && (
           <div
-            className={`p-3 rounded-xl text-xs font-sans ${
+            className={`p-3.5 rounded-xl text-xs font-sans ${
               apiStatus === 'success'
                 ? 'bg-[#0D6838]/30 border border-[#0D6838] text-[#68D391]'
                 : apiStatus === 'error'
@@ -316,25 +359,30 @@ export const RatesExplorer: React.FC = () => {
           </div>
         )}
 
-        {/* Expected JSON Schema documentation */}
-        <div className="pt-2 border-t border-white/10">
-          <div className="text-xs text-[#D1DDE8] font-bold mb-1.5 flex items-center gap-1.5">
-            <Code2 className="w-3.5 h-3.5 text-[#C5A059]" />
-            <span>Expected Backend JSON Response Format:</span>
+        {/* Expected JSON Schema and Gateway Details */}
+        <div className="pt-2 border-t border-white/10 space-y-2">
+          <div className="text-xs text-[#D1DDE8] font-bold flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Code2 className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span>Target MAS API Endpoints & Header Specification:</span>
+            </span>
+            <span className="text-[11px] font-mono text-[#C5A059]">Header: KeyId: &lt;MAS_KEY_ID&gt;</span>
           </div>
-          <pre className="p-3.5 bg-[#001A2E] rounded-xl text-[11px] font-mono text-[#68D391] overflow-x-auto border border-white/10">
-{`[
-  {
-    "date": "2026-10-05",
-    "rate": 2.7450,
-    "compound1M": 2.7600,
-    "compound3M": 2.7800,
-    "compound6M": 2.8000,
-    "volumeSGDMillion": 4150,
-    "soraIndex": 1.158420
-  }
-]`}
-          </pre>
+
+          <div className="p-3 bg-[#001A2E] rounded-xl text-[11px] font-mono text-slate-300 space-y-1.5 border border-white/10">
+            <div>
+              <span className="text-[#C5A059]"># Daily SORA & Compounded Averages:</span>
+              <div className="text-slate-400 break-all">
+                https://eservices.mas.gov.sg/apimg-gw/server/monthly_statistical_bulletin_non610mssql/domestic_interest_rates_daily/views/domestic_interest_rates_daily
+              </div>
+            </div>
+            <div className="pt-1 border-t border-white/5">
+              <span className="text-[#C5A059]"># Daily SGD Exchange Rates (End of Period):</span>
+              <div className="text-slate-400 break-all">
+                https://eservices.mas.gov.sg/apimg-gw/server/monthly_statistical_bulletin_non610ora/exchange_rates_end_of_period_daily/views/exchange_rates_end_of_period_daily
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
