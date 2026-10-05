@@ -6,8 +6,9 @@
     --mas-navy-dark: #001A2E;
     --mas-navy-light: #004B87;
     --mas-navy-subtle: #F0F6FA;
-    --mas-gold: #C5A059;
-    --mas-gold-dark: #9E7B34;
+    --mas-gold: #A78337;
+    --mas-gold-accent: #C5A059;
+    --mas-gold-dark: #8F6E2B;
     --mas-gold-light: #FDF8EE;
     --mas-green: #0D6838;
     --mas-green-light: #EBF7EE;
@@ -16,9 +17,16 @@
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Source Sans 3', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: #F8FAFC;
     color: #0F172A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Source Sans 3', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.015em;
   }
 
   .font-mono {
@@ -27,18 +35,18 @@
   }
 }
 
-/* Official MAS Navy & Gold Brand Identity Utilities (Strictly No Red) */
+/* Official MAS Navy & Gold Brand Identity Utilities */
 .bg-mas-navy { background-color: #002B49; }
 .hover\:bg-mas-navy-dark:hover { background-color: #001A2E; }
 .text-mas-navy { color: #002B49; }
 .border-mas-navy { border-color: #002B49; }
 
-.bg-mas-gold { background-color: #C5A059; }
-.text-mas-gold { color: #C5A059; }
-.border-mas-gold { border-color: #C5A059; }
+.bg-mas-gold { background-color: #A78337; }
+.text-mas-gold { color: #A78337; }
+.border-mas-gold { border-color: #A78337; }
 
 .bg-mas-gold-light { background-color: #FDF8EE; }
-.text-mas-gold-dark { color: #9E7B34; }
+.text-mas-gold-dark { color: #8F6E2B; }
 
 .bg-mas-green { background-color: #0D6838; }
 .text-mas-green { color: #0D6838; }
